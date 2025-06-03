@@ -96,7 +96,9 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
     Default is False.
     """
 
-    api_wrapper: EnhancedTavilySearchAPIWrapper = Field(default_factory=EnhancedTavilySearchAPIWrapper)  # type: ignore[arg-type]
+    api_wrapper: EnhancedTavilySearchAPIWrapper = Field(
+        default_factory=EnhancedTavilySearchAPIWrapper
+    )  # type: ignore[arg-type]
 
     def _run(
         self,
