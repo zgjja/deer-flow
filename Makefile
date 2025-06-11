@@ -4,10 +4,10 @@ install-dev:
 	uv pip install -e ".[dev]" && uv pip install -e ".[test]"
 
 format:
-	uv run black --preview .
+	uv run ruff format .
 
 lint:
-	uv run black --check .
+	uv run ruff check --fix .
 
 serve:
 	uv run server.py --reload
