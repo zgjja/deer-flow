@@ -1,13 +1,13 @@
 .PHONY: lint format install-dev serve test coverage
 
 install-dev:
-	uv pip install -e ".[dev]" && uv pip install -e ".[test]"
+	uv pip install -e ".[dev,test]"
 
 format:
-	uv run black --preview .
+	uv run ruff format --config pyproject.toml .
 
 lint:
-	uv run black --check .
+	uv run ruff check --fix --config pyproject.toml .
 
 serve:
 	uv run server.py --reload

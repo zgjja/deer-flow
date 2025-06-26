@@ -34,9 +34,7 @@ def get_prompt_template(prompt_name: str) -> str:
         raise ValueError(f"Error loading template {prompt_name}: {e}")
 
 
-def apply_prompt_template(
-    prompt_name: str, state: AgentState, configurable: Configuration = None
-) -> list:
+def apply_prompt_template(prompt_name: str, state: AgentState, configurable: Configuration = None) -> list:
     """
     Apply template variables to a prompt template and return formatted messages.
 

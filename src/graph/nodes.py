@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 @tool
 def handoff_to_planner(
-    research_topic: Annotated[str, "The topic of the research task to be handed off."],
+    task_title: Annotated[str, "The title of the task to be handed off."],
     locale: Annotated[str, "The user's detected language locale (e.g., en-US, zh-CN)."],
 ):
     """Handoff to planner agent to do plan."""
@@ -48,47 +48,33 @@ def handoff_to_planner(
 def background_investigation_node(state: State, config: RunnableConfig):
     logger.info("background investigation node is running.")
     configurable = Configuration.from_runnable_config(config)
-    query = state.get("research_topic")
+    query = state["messages"][-1].content
     background_investigation_results = None
     if SELECTED_SEARCH_ENGINE == SearchEngine.TAVILY.value:
-        searched_content = LoggedTavilySearch(
-            max_results=configurable.max_search_results
-        ).invoke(query)
+        searched_content = LoggedTavilySearch(max_results=configurable.max_search_results).invoke(query)
         if isinstance(searched_content, list):
             background_investigation_results = [
                 f"## {elem['title']}\n\n{elem['content']}" for elem in searched_content
             ]
-            return {
-                "background_investigation_results": "\n\n".join(
-                    background_investigation_results
-                )
-            }
+            return {"background_investigation_results": "\n\n".join(background_investigation_results)}
         else:
-            logger.error(
-                f"Tavily search returned malformed response: {searched_content}"
-            )
+            logger.error(f"Tavily search returned malformed response: {searched_content}")
     else:
-        background_investigation_results = get_web_search_tool(
-            configurable.max_search_results
-        ).invoke(query)
-    return {
-        "background_investigation_results": json.dumps(
-            background_investigation_results, ensure_ascii=False
-        )
-    }
+        background_investigation_results = get_web_search_tool(configurable.max_search_results).invoke(query)
+    return {"background_investigation_results": json.dumps(background_investigation_results, ensure_ascii=False)}
 
 
-def planner_node(
-    state: State, config: RunnableConfig
-) -> Command[Literal["human_feedback", "reporter"]]:
+def planner_node(state: State, config: RunnableConfig) -> Command[Literal["human_feedback", "reporter"]]:
     """Planner node that generate the full plan."""
     logger.info("Planner generating full plan")
     configurable = Configuration.from_runnable_config(config)
     plan_iterations = state["plan_iterations"] if state.get("plan_iterations", 0) else 0
     messages = apply_prompt_template("planner", state, configurable)
 
-    if state.get("enable_background_investigation") and state.get(
-        "background_investigation_results"
+    if (
+        plan_iterations == 0
+        and state.get("enable_background_investigation")
+        and state.get("background_investigation_results")
     ):
         messages += [
             {
@@ -101,10 +87,8 @@ def planner_node(
             }
         ]
 
-    if configurable.enable_deep_thinking:
-        llm = get_llm_by_type("reasoning")
-    elif AGENT_LLM_MAP["planner"] == "basic":
-        llm = get_llm_by_type("basic").with_structured_output(
+    if AGENT_LLM_MAP["planner"] == "basic":
+        llm = get_llm_by_type(AGENT_LLM_MAP["planner"]).with_structured_output(
             Plan,
             method="json_mode",
         )
@@ -116,7 +100,7 @@ def planner_node(
         return Command(goto="reporter")
 
     full_response = ""
-    if AGENT_LLM_MAP["planner"] == "basic" and not configurable.enable_deep_thinking:
+    if AGENT_LLM_MAP["planner"] == "basic":
         response = llm.invoke(messages)
         full_response = response.model_dump_json(indent=4, exclude_none=True)
     else:
@@ -190,7 +174,7 @@ def human_feedback_node(
             goto = "reporter"
     except json.JSONDecodeError:
         logger.warning("Planner response is not a valid JSON")
-        if plan_iterations > 1:  # the plan_iterations is increased before this check
+        if plan_iterations > 0:
             return Command(goto="reporter")
         else:
             return Command(goto="__end__")
@@ -212,16 +196,11 @@ def coordinator_node(
     logger.info("Coordinator talking.")
     configurable = Configuration.from_runnable_config(config)
     messages = apply_prompt_template("coordinator", state)
-    response = (
-        get_llm_by_type(AGENT_LLM_MAP["coordinator"])
-        .bind_tools([handoff_to_planner])
-        .invoke(messages)
-    )
+    response = get_llm_by_type(AGENT_LLM_MAP["coordinator"]).bind_tools([handoff_to_planner]).invoke(messages)
     logger.debug(f"Current state messages: {state['messages']}")
 
     goto = "__end__"
     locale = state.get("locale", "en-US")  # Default locale if not specified
-    research_topic = state.get("research_topic", "")
 
     if len(response.tool_calls) > 0:
         goto = "planner"
@@ -232,26 +211,17 @@ def coordinator_node(
             for tool_call in response.tool_calls:
                 if tool_call.get("name", "") != "handoff_to_planner":
                     continue
-                if tool_call.get("args", {}).get("locale") and tool_call.get(
-                    "args", {}
-                ).get("research_topic"):
-                    locale = tool_call.get("args", {}).get("locale")
-                    research_topic = tool_call.get("args", {}).get("research_topic")
+                if tool_locale := tool_call.get("args", {}).get("locale"):
+                    locale = tool_locale
                     break
         except Exception as e:
             logger.error(f"Error processing tool calls: {e}")
     else:
-        logger.warning(
-            "Coordinator response contains no tool calls. Terminating workflow execution."
-        )
+        logger.warning("Coordinator response contains no tool calls. Terminating workflow execution.")
         logger.debug(f"Coordinator response: {response}")
 
     return Command(
-        update={
-            "locale": locale,
-            "research_topic": research_topic,
-            "resources": configurable.resources,
-        },
+        update={"locale": locale, "resources": configurable.resources},
         goto=goto,
     )
 
@@ -301,9 +271,7 @@ def research_team_node(state: State):
     pass
 
 
-async def _execute_agent_step(
-    state: State, agent, agent_name: str
-) -> Command[Literal["research_team"]]:
+async def _execute_agent_step(state: State, agent, agent_name: str) -> Command[Literal["research_team"]]:
     """Helper function to execute a step using the specified agent."""
     current_plan = state.get("current_plan")
     observations = state.get("observations", [])
@@ -381,15 +349,12 @@ async def _execute_agent_step(
     except ValueError:
         raw_env_value = os.getenv("AGENT_RECURSION_LIMIT")
         logger.warning(
-            f"Invalid AGENT_RECURSION_LIMIT value: '{raw_env_value}'. "
-            f"Using default value {default_recursion_limit}."
+            f"Invalid AGENT_RECURSION_LIMIT value: '{raw_env_value}'. Using default value {default_recursion_limit}."
         )
         recursion_limit = default_recursion_limit
 
     logger.info(f"Agent input: {agent_input}")
-    result = await agent.ainvoke(
-        input=agent_input, config={"recursion_limit": recursion_limit}
-    )
+    result = await agent.ainvoke(input=agent_input, config={"recursion_limit": recursion_limit})
 
     # Process the result
     response_content = result["messages"][-1].content
@@ -442,14 +407,9 @@ async def _setup_and_execute_agent_step(
     # Extract MCP server configuration for this agent type
     if configurable.mcp_settings:
         for server_name, server_config in configurable.mcp_settings["servers"].items():
-            if (
-                server_config["enabled_tools"]
-                and agent_type in server_config["add_to_agents"]
-            ):
+            if server_config["enabled_tools"] and agent_type in server_config["add_to_agents"]:
                 mcp_servers[server_name] = {
-                    k: v
-                    for k, v in server_config.items()
-                    if k in ("transport", "command", "args", "url", "env")
+                    k: v for k, v in server_config.items() if k in ("transport", "command", "args", "url", "env")
                 }
                 for tool_name in server_config["enabled_tools"]:
                     enabled_tools[tool_name] = server_name
@@ -460,9 +420,7 @@ async def _setup_and_execute_agent_step(
             loaded_tools = default_tools[:]
             for tool in client.get_tools():
                 if tool.name in enabled_tools:
-                    tool.description = (
-                        f"Powered by '{enabled_tools[tool.name]}'.\n{tool.description}"
-                    )
+                    tool.description = f"Powered by '{enabled_tools[tool.name]}'.\n{tool.description}"
                     loaded_tools.append(tool)
             agent = create_agent(agent_type, agent_type, loaded_tools, agent_type)
             return await _execute_agent_step(state, agent, agent_type)
@@ -472,9 +430,7 @@ async def _setup_and_execute_agent_step(
         return await _execute_agent_step(state, agent, agent_type)
 
 
-async def researcher_node(
-    state: State, config: RunnableConfig
-) -> Command[Literal["research_team"]]:
+async def researcher_node(state: State, config: RunnableConfig) -> Command[Literal["research_team"]]:
     """Researcher node that do research"""
     logger.info("Researcher node is researching.")
     configurable = Configuration.from_runnable_config(config)
@@ -491,9 +447,7 @@ async def researcher_node(
     )
 
 
-async def coder_node(
-    state: State, config: RunnableConfig
-) -> Command[Literal["research_team"]]:
+async def coder_node(state: State, config: RunnableConfig) -> Command[Literal["research_team"]]:
     """Coder node that do code analysis."""
     logger.info("Coder node is coding.")
     return await _setup_and_execute_agent_step(

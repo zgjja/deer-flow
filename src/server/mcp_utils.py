@@ -3,7 +3,7 @@
 
 import logging
 from datetime import timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException
 from mcp import ClientSession, StdioServerParameters
@@ -13,9 +13,7 @@ from mcp.client.sse import sse_client
 logger = logging.getLogger(__name__)
 
 
-async def _get_tools_from_client_session(
-    client_context_manager: Any, timeout_seconds: int = 10
-) -> List:
+async def _get_tools_from_client_session(client_context_manager: Any, timeout_seconds: int = 10) -> List:
     """
     Helper function to get tools from a client session.
 
@@ -30,9 +28,7 @@ async def _get_tools_from_client_session(
         Exception: If there's an error during the process
     """
     async with client_context_manager as (read, write):
-        async with ClientSession(
-            read, write, read_timeout_seconds=timedelta(seconds=timeout_seconds)
-        ) as session:
+        async with ClientSession(read, write, read_timeout_seconds=timedelta(seconds=timeout_seconds)) as session:
             # Initialize the connection
             await session.initialize()
             # List available tools
@@ -68,9 +64,7 @@ async def load_mcp_tools(
     try:
         if server_type == "stdio":
             if not command:
-                raise HTTPException(
-                    status_code=400, detail="Command is required for stdio type"
-                )
+                raise HTTPException(status_code=400, detail="Command is required for stdio type")
 
             server_params = StdioServerParameters(
                 command=command,  # Executable
@@ -78,24 +72,16 @@ async def load_mcp_tools(
                 env=env,  # Optional environment variables
             )
 
-            return await _get_tools_from_client_session(
-                stdio_client(server_params), timeout_seconds
-            )
+            return await _get_tools_from_client_session(stdio_client(server_params), timeout_seconds)
 
         elif server_type == "sse":
             if not url:
-                raise HTTPException(
-                    status_code=400, detail="URL is required for sse type"
-                )
+                raise HTTPException(status_code=400, detail="URL is required for sse type")
 
-            return await _get_tools_from_client_session(
-                sse_client(url=url), timeout_seconds
-            )
+            return await _get_tools_from_client_session(sse_client(url=url), timeout_seconds)
 
         else:
-            raise HTTPException(
-                status_code=400, detail=f"Unsupported server type: {server_type}"
-            )
+            raise HTTPException(status_code=400, detail=f"Unsupported server type: {server_type}")
 
     except Exception as e:
         if not isinstance(e, HTTPException):

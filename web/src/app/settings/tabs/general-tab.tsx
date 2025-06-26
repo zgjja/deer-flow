@@ -36,7 +36,6 @@ const generalFormSchema = z.object({
   }),
   // Others
   enableBackgroundInvestigation: z.boolean(),
-  enableDeepThinking: z.boolean(),
   reportStyle: z.enum(["academic", "popular_science", "news", "social_media"]),
 });
 
@@ -179,5 +178,5 @@ export const GeneralTab: Tab = ({
     </div>
   );
 };
-GeneralTab.displayName = "General";
+GeneralTab.displayName = "";
 GeneralTab.icon = Settings;

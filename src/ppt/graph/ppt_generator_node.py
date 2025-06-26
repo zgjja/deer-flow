@@ -15,9 +15,7 @@ def ppt_generator_node(state: PPTState):
     logger.info("Generating ppt file...")
     # use marp cli to generate ppt file
     # https://github.com/marp-team/marp-cli?tab=readme-ov-file
-    generated_file_path = os.path.join(
-        os.getcwd(), f"generated_ppt_{uuid.uuid4()}.pptx"
-    )
+    generated_file_path = os.path.join(os.getcwd(), f"generated_ppt_{uuid.uuid4()}.pptx")
     subprocess.run(["marp", state["ppt_file_path"], "-o", generated_file_path])
     # remove the temp file
     os.remove(state["ppt_file_path"])

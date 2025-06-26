@@ -1,7 +1,3 @@
-# Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
-# Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
-# SPDX-License-Identifier: MIT
-
 import json
 from typing import Dict, List, Optional
 
@@ -85,9 +81,7 @@ class EnhancedTavilySearchAPIWrapper(OriginalTavilySearchAPIWrapper):
         results_json_str = await fetch()
         return json.loads(results_json_str)
 
-    def clean_results_with_images(
-        self, raw_results: Dict[str, List[Dict]]
-    ) -> List[Dict]:
+    def clean_results_with_images(self, raw_results: Dict[str, List[Dict]]) -> List[Dict]:
         results = raw_results["results"]
         """Clean results from Tavily Search API."""
         clean_results = []
@@ -111,3 +105,9 @@ class EnhancedTavilySearchAPIWrapper(OriginalTavilySearchAPIWrapper):
             }
             clean_results.append(clean_result)
         return clean_results
+
+
+if __name__ == "__main__":
+    wrapper = EnhancedTavilySearchAPIWrapper()
+    results = wrapper.raw_results("cute panda", include_images=True)
+    print(json.dumps(results, indent=2, ensure_ascii=False))

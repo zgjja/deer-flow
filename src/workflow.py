@@ -1,7 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import asyncio
 import logging
 from src.graph import build_graph
 
@@ -75,9 +74,7 @@ async def run_agent_workflow_async(
         "recursion_limit": 100,
     }
     last_message_cnt = 0
-    async for s in graph.astream(
-        input=initial_state, config=config, stream_mode="values"
-    ):
+    async for s in graph.astream(input=initial_state, config=config, stream_mode="values"):
         try:
             if isinstance(s, dict) and "messages" in s:
                 if len(s["messages"]) <= last_message_cnt:

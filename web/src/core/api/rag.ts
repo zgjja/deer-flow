@@ -10,7 +10,15 @@ export function queryRAGResources(query: string) {
     .then((res) => {
       return res.resources as Array<Resource>;
     })
-    .catch(() => {
+    .catch((err) => {
       return [];
     });
+}
+
+export function getRAGConfig() {
+  return fetch(resolveServiceURL(`rag/config`), {
+    method: "GET",
+  })
+    .then((res) => res.json())
+    .then((res) => res.provider);
 }

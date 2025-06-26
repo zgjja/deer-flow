@@ -36,9 +36,7 @@ class TestPromptEnhancerNode:
         "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_basic_prompt_enhancement(
-        self, mock_get_llm, mock_apply_template, mock_llm, mock_messages
-    ):
+    def test_basic_prompt_enhancement(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
         """Test basic prompt enhancement without context or report style."""
         mock_get_llm.return_value = mock_llm
         mock_apply_template.return_value = mock_messages
@@ -67,16 +65,12 @@ class TestPromptEnhancerNode:
         "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_prompt_enhancement_with_report_style(
-        self, mock_get_llm, mock_apply_template, mock_llm, mock_messages
-    ):
+    def test_prompt_enhancement_with_report_style(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
         """Test prompt enhancement with report style."""
         mock_get_llm.return_value = mock_llm
         mock_apply_template.return_value = mock_messages
 
-        state = PromptEnhancerState(
-            prompt="Write about AI", report_style=ReportStyle.ACADEMIC
-        )
+        state = PromptEnhancerState(prompt="Write about AI", report_style=ReportStyle.ACADEMIC)
 
         result = prompt_enhancer_node(state)
 
@@ -95,16 +89,12 @@ class TestPromptEnhancerNode:
         "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_prompt_enhancement_with_context(
-        self, mock_get_llm, mock_apply_template, mock_llm, mock_messages
-    ):
+    def test_prompt_enhancement_with_context(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
         """Test prompt enhancement with additional context."""
         mock_get_llm.return_value = mock_llm
         mock_apply_template.return_value = mock_messages
 
-        state = PromptEnhancerState(
-            prompt="Write about AI", context="Focus on machine learning applications"
-        )
+        state = PromptEnhancerState(prompt="Write about AI", context="Focus on machine learning applications")
 
         result = prompt_enhancer_node(state)
 
@@ -127,9 +117,7 @@ class TestPromptEnhancerNode:
         "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_error_handling(
-        self, mock_get_llm, mock_apply_template, mock_llm, mock_messages
-    ):
+    def test_error_handling(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
         """Test error handling when LLM call fails."""
         mock_get_llm.return_value = mock_llm
         mock_apply_template.return_value = mock_messages
@@ -149,9 +137,7 @@ class TestPromptEnhancerNode:
         "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_template_error_handling(
-        self, mock_get_llm, mock_apply_template, mock_llm, mock_messages
-    ):
+    def test_template_error_handling(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
         """Test error handling when template application fails."""
         mock_get_llm.return_value = mock_llm
 
@@ -170,9 +156,7 @@ class TestPromptEnhancerNode:
         "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_prefix_removal(
-        self, mock_get_llm, mock_apply_template, mock_llm, mock_messages
-    ):
+    def test_prefix_removal(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
         """Test that common prefixes are removed from LLM response."""
         mock_get_llm.return_value = mock_llm
         mock_apply_template.return_value = mock_messages
@@ -201,17 +185,13 @@ class TestPromptEnhancerNode:
         "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_whitespace_handling(
-        self, mock_get_llm, mock_apply_template, mock_llm, mock_messages
-    ):
+    def test_whitespace_handling(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
         """Test that whitespace is properly stripped from LLM response."""
         mock_get_llm.return_value = mock_llm
         mock_apply_template.return_value = mock_messages
 
         # Mock LLM response with extra whitespace
-        mock_llm.invoke.return_value = MagicMock(
-            content="  \n\n  Enhanced prompt  \n\n  "
-        )
+        mock_llm.invoke.return_value = MagicMock(content="  \n\n  Enhanced prompt  \n\n  ")
 
         state = PromptEnhancerState(prompt="Test prompt")
         result = prompt_enhancer_node(state)

@@ -17,15 +17,11 @@ class Step(BaseModel):
     title: str
     description: str = Field(..., description="Specify exactly what data to collect")
     step_type: StepType = Field(..., description="Indicates the nature of the step")
-    execution_res: Optional[str] = Field(
-        default=None, description="The Step execution result"
-    )
+    execution_res: Optional[str] = Field(default=None, description="The Step execution result")
 
 
 class Plan(BaseModel):
-    locale: str = Field(
-        ..., description="e.g. 'en-US' or 'zh-CN', based on the user's language"
-    )
+    locale: str = Field(..., description="e.g. 'en-US' or 'zh-CN', based on the user's language")
     has_enough_context: bool
     thought: str
     title: str

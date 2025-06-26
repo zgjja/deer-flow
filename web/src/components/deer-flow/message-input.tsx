@@ -102,7 +102,6 @@ const MessageInput = forwardRef<MessageInputRef, MessageInputProps>(
           );
           onEnter(text, resources);
         }
-        editorRef.current?.commands.clearContent();
       },
       setContent: (content: string) => {
         if (editorRef.current) {

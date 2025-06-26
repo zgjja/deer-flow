@@ -31,9 +31,7 @@ class RAGFlowProvider(Retriever):
         if page_size:
             self.page_size = int(page_size)
 
-    def query_relevant_documents(
-        self, query: str, resources: list[Resource] = []
-    ) -> list[Document]:
+    def query_relevant_documents(self, query: str, resources: list[Resource] = []) -> list[Document]:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -55,9 +53,7 @@ class RAGFlowProvider(Retriever):
             "page_size": self.page_size,
         }
 
-        response = requests.post(
-            f"{self.api_url}/api/v1/retrieval", headers=headers, json=payload
-        )
+        response = requests.post(f"{self.api_url}/api/v1/retrieval", headers=headers, json=payload)
 
         if response.status_code != 200:
             raise Exception(f"Failed to query documents: {response.text}")
@@ -96,9 +92,7 @@ class RAGFlowProvider(Retriever):
         if query:
             params["name"] = query
 
-        response = requests.get(
-            f"{self.api_url}/api/v1/datasets", headers=headers, params=params
-        )
+        response = requests.get(f"{self.api_url}/api/v1/datasets", headers=headers, params=params)
 
         if response.status_code != 200:
             raise Exception(f"Failed to list resources: {response.text}")
@@ -122,3 +116,12 @@ def parse_uri(uri: str) -> tuple[str, str]:
     if parsed.scheme != "rag":
         raise ValueError(f"Invalid URI: {uri}")
     return parsed.path.split("/")[1], parsed.fragment
+
+
+if __name__ == "__main__":
+    uri = "rag://dataset/123#abc"
+    parsed = urlparse(uri)
+    print(parsed.scheme)
+    print(parsed.netloc)
+    print(parsed.path)
+    print(parsed.fragment)
