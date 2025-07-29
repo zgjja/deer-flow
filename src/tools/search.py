@@ -9,13 +9,11 @@ from langchain_community.tools import BraveSearch, DuckDuckGoSearchResults
 from langchain_community.tools.arxiv import ArxivQueryRun
 from langchain_community.utilities import ArxivAPIWrapper, BraveSearchWrapper
 
-from src.config import SearchEngine, SELECTED_SEARCH_ENGINE
-from src.config import load_yaml_config
+from src.config import SELECTED_SEARCH_ENGINE, SearchEngine, load_yaml_config
+from src.tools.decorators import create_logged_tool
 from src.tools.tavily_search.tavily_search_results_with_images import (
     TavilySearchResultsWithImages,
 )
-
-from src.tools.decorators import create_logged_tool
 
 logger = logging.getLogger(__name__)
 

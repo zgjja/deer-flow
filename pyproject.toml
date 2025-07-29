@@ -38,7 +38,6 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "ruff",
-    "black>=24.2.0",
     "langgraph-cli[inmem]>=0.2.10",
 ]
 test = [
@@ -65,12 +64,13 @@ fail_under = 25
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ["py312"]
-include = '\.pyi?$'
-extend-exclude = '''
-# A regex preceded with ^/ will apply only to files and directories
-# in the root of the project.
-^/build/
-'''
+indent-width = 4
+target-version = "py312"
+extend-include = ["*.pyi"]
+
+[tool.ruff.format]
+indent-style = "space"
+line-ending = "auto"
+exclude = ['^/build/']

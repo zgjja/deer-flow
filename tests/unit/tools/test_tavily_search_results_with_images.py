@@ -1,18 +1,19 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock
-from src.tools.tavily_search.tavily_search_results_with_images import (
-    TavilySearchResultsWithImages,
-)
+
 from src.tools.tavily_search.tavily_search_api_wrapper import (
     EnhancedTavilySearchAPIWrapper,
+)
+from src.tools.tavily_search.tavily_search_results_with_images import (
+    TavilySearchResultsWithImages,
 )
 
 
 class TestTavilySearchResultsWithImages:
-
     @pytest.fixture
     def mock_api_wrapper(self):
         """Create a mock API wrapper."""

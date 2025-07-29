@@ -1,8 +1,8 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import logging
 import json
+import logging
 from typing import Dict, List, Optional, Tuple, Union
 
 from langchain.callbacks.manager import (
@@ -102,7 +102,9 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
     Default is False.
     """
 
-    api_wrapper: EnhancedTavilySearchAPIWrapper = Field(default_factory=EnhancedTavilySearchAPIWrapper)  # type: ignore[arg-type]
+    api_wrapper: EnhancedTavilySearchAPIWrapper = Field(
+        default_factory=EnhancedTavilySearchAPIWrapper
+    )  # type: ignore[arg-type]
 
     def _run(
         self,
